@@ -44,6 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
             sendMessage();
         }
     });
+
+    // Disconnect socket when page is closed or refreshed
+    window.addEventListener('beforeunload', () => {
+        if (socket && socket.connected) {
+            socket.disconnect();
+        }
+    });
 });
 
 // Request notification permission
