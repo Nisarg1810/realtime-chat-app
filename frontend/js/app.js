@@ -204,8 +204,8 @@ function initializeSocket() {
         }
     });
 
-    // Update online count
-    socket.on('update_online_count', (data) => {
+    // Online count update (for reconnections without join message)
+    socket.on('online_count_update', (data) => {
         updateOnlineCount(data.online_count);
     });
 
