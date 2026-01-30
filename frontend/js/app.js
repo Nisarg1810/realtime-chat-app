@@ -283,9 +283,8 @@ function displayMessage(data) {
         messageDiv.setAttribute('data-message-id', data.message_id);
     }
     
-    // Get message length color
-    const messageLength = data.message.length;
-    const colorIndicator = getMessageColorIndicator(messageLength);
+    // Get first letter of username for avatar
+    const avatarLetter = data.username.charAt(0).toUpperCase();
 
     const timestamp = formatTimestamp(data.timestamp);
     
@@ -304,19 +303,21 @@ function displayMessage(data) {
     }
 
     messageDiv.innerHTML = `
-        ${colorIndicator}
-        <div class="message-header">
-            <span class="username">${escapeHtml(data.username)}</span>
-            <span class="timestamp">${timestamp}</span>
-        </div>
-        ${replyHTML}
-        <div class="message-content">
-            ${escapeHtml(data.message)}
-        </div>
-        <div class="message-actions">
-            ${!isOwnMessage ? '<button class="action-btn reply-btn" title="Reply">↩️</button>' : ''}
-            ${isOwnMessage ? '<button class="action-btn delete-btn" title="Delete" data-message-id="' + (data.message_id || '') + '">🗑️</button>' : ''}
-            ${isOwnMessage ? '<div class="message-status"><span class="status-tick" data-status="sent">✓</span></div>' : ''}
+        <div class="message-avatar">${avatarLetter}</div>
+        <div class="message-wrapper">
+            <div class="message-header">
+                <span class="username">${escapeHtml(data.username)}</span>
+                <span class="timestamp">${timestamp}</span>
+            </div>
+            ${replyHTML}
+            <div class="message-content">
+                ${escapeHtml(data.message)}
+            </div>
+            <div class="message-actions">
+                ${!isOwnMessage ? '<button class="action-btn reply-btn" title="Reply">↩️</button>' : ''}
+                ${isOwnMessage ? '<button class="action-btn delete-btn" title="Delete" data-message-id="' + (data.message_id || '') + '">🗑️</button>' : ''}
+                ${isOwnMessage ? '<div class="message-status"><span class="status-tick" data-status="sent">✓</span></div>' : ''}
+            </div>
         </div>
     `;
 
