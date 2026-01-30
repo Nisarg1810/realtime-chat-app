@@ -302,9 +302,9 @@ function displayMessage(data) {
             ${escapeHtml(data.message)}
         </div>
         <div class="message-actions">
+            ${!isOwnMessage ? '<button class="action-btn reply-btn" title="Reply">↩️</button>' : ''}
+            ${isOwnMessage ? '<button class="action-btn delete-btn" title="Delete" data-message-id="' + (data.message_id || '') + '">🗑️</button>' : ''}
             ${isOwnMessage ? '<div class="message-status"><span class="status-tick" data-status="sent">✓</span></div>' : ''}
-            ${!isOwnMessage ? '<button class="reply-btn" title="Reply">↩️</button>' : ''}
-            ${isOwnMessage ? '<button class="delete-btn" title="Delete">🗑️</button>' : ''}
         </div>
     `;
 
@@ -316,10 +316,14 @@ function displayMessage(data) {
         }
     }
     
-    if (isOwnMessage) {
+    if (isOwnMessage && data.message_id) {
         const deleteBtn = messageDiv.querySelector('.delete-btn');
         if (deleteBtn) {
-            deleteBtn.onclick = () => deleteMessage(data.message_id);
+            deleteBtn.onclick = (e) => {
+                e.preventDefault();
+                const msgId = deleteBtn.getAttribute('data-message-id');
+                deleteMessage(msgId);
+            };
         }
     }
 

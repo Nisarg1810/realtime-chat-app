@@ -79,10 +79,15 @@ def handle_user_joined(data):
     global online_count
     
     username = data.get('username', 'Anonymous')
-    connected_users[request.sid] = username
-    online_count = len(connected_users)
     
-    print(f'User joined: {username} (SID: {request.sid})')
+    # Check if this session already has a username (reconnection)
+    if request.sid in connected_users:
+        print(f'User reconnected: {username} (SID: {request.sid})')
+    else:
+        connected_users[request.sid] = username
+        print(f'User joined: {username} (SID: {request.sid})')
+    
+    online_count = len(connected_users)
     print(f'Total online: {online_count}')
     
     # Broadcast to all clients
