@@ -123,27 +123,6 @@ body {
     gap: 5px;
 }
 
-.logout-btn {
-    margin-top: 5px;
-    padding: 5px 12px;
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 5px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.2s;
-}
-
-.logout-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
-}
-
-.logout-btn:active {
-    transform: translateY(0);
-}
-
 .online-count {
     font-size: 14px;
     opacity: 0.9;

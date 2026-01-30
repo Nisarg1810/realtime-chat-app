@@ -1,38 +1,32 @@
-# Real-Time Chat Application
+# Real-Time Analysis Application
 
-A modern real-time chat application built with HTML/CSS/JavaScript frontend and Flask + Socket.IO backend.
+A modern real-time analysis application built with HTML/CSS/JavaScript frontend and Flask + Socket.IO backend.
 
 ## 🚀 Features
 
-- ✅ **User Authentication** - Register/Login with username and password
 - ✅ Real-time messaging using WebSockets
 - ✅ **Web Notifications** - Browser notifications for new messages when window is not focused
 - ✅ User join/leave notifications
 - ✅ Online user count
-- ✅ Session management with secure logout
 - ✅ Responsive design for mobile and desktop
 - ✅ Message timestamps
 - ✅ Clean and modern UI
 - ✅ XSS protection
-- ✅ Password hashing with Werkzeug
 
 ## 📁 Project Structure
 
 ```
 Nisarg/
 ├── frontend/               # Frontend files (Deploy to Vercel)
-│   ├── login.html         # Login/Register page
 │   ├── index.html         # Main chat interface
 │   ├── css/
-│   │   ├── auth.css       # Login/Register styles
 │   │   └── style.css      # Chat UI styles
 │   ├── js/
-│   │   ├── auth.js        # Authentication logic
 │   │   └── app.js         # Chat app with Socket.IO client
 │   └── vercel.json        # Vercel configuration
 │
 ├── backend/               # Backend files (Deploy to Render/Railway)
-│   ├── app.py            # Flask server with Socket.IO & Authentication
+│   ├── app.py            # Flask server with Socket.IO
 │   ├── requirements.txt  # Python dependencies
 │   └── .gitignore       # Backend ignore file
 │
@@ -77,21 +71,20 @@ Nisarg/
 
 ### Frontend Setup
 
-1. **Open login page:**
-   - Open `frontend/login.html` in your browser
+1. **Open chat page:**
+   - Open `frontend/index.html` in your browser
    - Or use a local server like Live Server (VS Code extension)
 
 2. **For testing with backend:**
    - Make sure backend is running on `http://localhost:5000`
-   - Open `frontend/login.html` in browser
-   - Register a new account or login
+   - Open `frontend/index.html` in browser
+   - Enter username and start chatting
    - Grant notification permissions when prompted
-   - Start chatting!
 
 3. **Test with multiple users:**
-   - Open multiple browser windows with `login.html`
-   - Register different users
-   - Login and test real-time messaging and notifications
+   - Open multiple browser windows with `index.html`
+   - Enter different usernames
+   - Test real-time messaging and notifications
 
 ## 🌐 Deployment
 
@@ -160,14 +153,14 @@ curl http://localhost:5000/health
 
 ### Change Backend URL (Production)
 
-Update both `frontend/js/app.js` and `frontend/js/auth.js`:
+Update `frontend/js/app.js`:
 ```javascript
 const BACKEND_URL = 'https://your-backend-url.com';
 ```
 
 ### Change Secret Key (Production)
 
-The backend now generates a secure random key automatically. For production persistence, you can set a fixed key in `backend/app.py`:
+Update `backend/app.py`:
 ```python
 app.config['SECRET_KEY'] = 'your-secure-random-key-here'
 ```
@@ -185,7 +178,6 @@ app.config['SECRET_KEY'] = 'your-secure-random-key-here'
 - Flask 3.0.0+
 - Flask-SocketIO 5.3.6+
 - Flask-CORS 4.0.0+
-- Werkzeug (for password hashing)
 - Eventlet 0.35.2+
 
 ## 🔔 Web Notifications

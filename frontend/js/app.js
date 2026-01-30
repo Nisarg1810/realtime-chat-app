@@ -4,7 +4,6 @@ const BACKEND_URL = 'http://localhost:5000'; // Change this to your backend URL 
 // Global variables
 let socket;
 let username = '';
-let currentSid = null;  // Store current session ID for notification filtering
 
 // DOM Elements
 const usernameModal = document.getElementById('usernameModal');
@@ -16,12 +15,11 @@ const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 const currentUsername = document.getElementById('currentUsername');
 const onlineCount = document.getElementById('onlineCount');
-const logoutBtn = document.getElementById('logoutBtn');
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    // Check authentication first
-    checkAuthentication();
+    // Request notification permission on page load
+    requestNotificationPermission();
 
     // Focus on username input
     usernameInput.focus();
@@ -45,39 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sendMessage();
         }
     });
-
-    // Logout handler
-    logoutBtn.addEventListener('click', handleLogout);
 });
-
-// Check if user is authenticated
-async function checkAuthentication() {
-    try {
-        const response = await fetch(`${BACKEND_URL}/api/check-auth`, {
-            credentials: 'include'
-        });
-        const data = await response.json();
-        
-        if (!data.authenticated) {
-            // Redirect to login page
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        // User is authenticated, pre-fill username
-        const storedUsername = localStorage.getItem('chat_username') || data.username;
-        if (storedUsername) {
-            usernameInput.value = storedUsername;
-        }
-        
-        // Request notification permission
-        requestNotificationPermission();
-    } catch (error) {
-        console.error('Auth check failed:', error);
-        // Still allow chat in case of network error
-        requestNotificationPermission();
-    }
-}
 
 // Request notification permission
 function requestNotificationPermission() {
@@ -85,7 +51,7 @@ function requestNotificationPermission() {
         Notification.requestPermission().then(permission => {
             if (permission === 'granted') {
                 console.log('Notification permission granted');
-                showNotification('Notifications Enabled', 'You will receive notifications for new messages');
+                showNotification('Real-Time Analysis', 'You will receive notifications for new messages');
             }
         });
     }
@@ -102,6 +68,9 @@ function joinChat() {
 
     username = enteredUsername;
     currentUsername.textContent = username;
+
+    // Store username in localStorage
+    localStorage.setItem('analysis_username', username);
 
     // Hide modal and show chat
     usernameModal.style.display = 'none';
@@ -123,7 +92,6 @@ function initializeSocket() {
     // Connection successful
     socket.on('connect', () => {
         console.log('Connected to server');
-        currentSid = socket.id;  // Store own session ID
         // Emit user joined event
         socket.emit('user_joined', { username: username });
     });
@@ -133,7 +101,7 @@ function initializeSocket() {
         displayMessage(data);
         
         // Show notification if message is from someone else and window is not focused
-        if (data.sender_sid !== currentSid && (!document.hasFocus() || document.hidden)) {
+        if (data.username !== username && (!document.hasFocus() || document.hidden)) {
             showNotification(data.username, data.message);
         }
     });
@@ -141,12 +109,12 @@ function initializeSocket() {
     // User joined notification
     socket.on('user_joined', (data) => {
         // Don't show notification for own join
-        if (data.sid !== currentSid) {
-            displaySystemMessage(`${data.username} joined the chat`);
+        if (data.username !== username) {
+            displaySystemMessage(`${data.username} joined the analysis`);
             
             // Show browser notification
             if (!document.hasFocus() || document.hidden) {
-                showNotification('User Joined', `${data.username} joined the chat`);
+                showNotification('User Joined', `${data.username} joined the analysis`);
             }
         }
         updateOnlineCount(data.online_count);
@@ -154,12 +122,12 @@ function initializeSocket() {
 
     // User left notification
     socket.on('user_left', (data) => {
-        displaySystemMessage(`${data.username} left the chat`);
+        displaySystemMessage(`${data.username} left the analysis`);
         updateOnlineCount(data.online_count);
         
         // Show browser notification
         if (!document.hasFocus() || document.hidden) {
-            showNotification('User Left', `${data.username} left the chat`);
+            showNotification('User Left', `${data.username} left the analysis`);
         }
     });
 
@@ -276,31 +244,5 @@ function showNotification(title, body) {
             window.focus();
             this.close();
         };
-    }
-}
-
-// Handle logout
-async function handleLogout() {
-    try {
-        // Disconnect socket
-        if (socket && socket.connected) {
-            socket.disconnect();
-        }
-
-        // Call logout API
-        await fetch(`${BACKEND_URL}/api/logout`, {
-            method: 'POST',
-            credentials: 'include'
-        });
-
-        // Clear local storage
-        localStorage.removeItem('chat_username');
-
-        // Redirect to login
-        window.location.href = 'login.html';
-    } catch (error) {
-        console.error('Logout error:', error);
-        // Still redirect even if API call fails
-        window.location.href = 'login.html';
     }
 }
