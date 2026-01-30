@@ -2,9 +2,10 @@ from flask import Flask, request
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 from datetime import datetime
+import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 # Enable CORS
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -103,6 +104,11 @@ def default_error_handler(e):
 
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    debug_mode = os.environ.get('FLASK_ENV', 'development') == 'development'
+    
     print('Starting Flask Socket.IO Analysis Server...')
-    print('Server running on http://localhost:5000')
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)
+    print(f'Server running on port {port}')
+    print(f'Debug mode: {debug_mode}')
+    
+    socketio.run(app, host='0.0.0.0', port=port, debug=debug_mode, allow_unsafe_werkzeug=True)
