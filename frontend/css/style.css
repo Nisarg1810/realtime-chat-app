@@ -157,6 +157,7 @@ body {
 .message {
     margin-bottom: 15px;
     animation: fadeIn 0.3s ease-in;
+    position: relative;
 }
 
 @keyframes fadeIn {
@@ -168,6 +169,19 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Message Size Indicator (Color Box) */
+.message-size-indicator {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    margin-bottom: 5px;
+    opacity: 0.8;
+}
+
+.message.own .message-size-indicator {
+    margin-left: auto;
 }
 
 .message-header {
@@ -193,6 +207,9 @@ body {
     border-radius: 15px;
     max-width: 70%;
     word-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
     line-height: 1.4;
 }
 
@@ -368,7 +385,6 @@ body {
     border-radius: 5px;
     cursor: pointer;
     font-size: 14px;
-    margin-left: 8px;
     opacity: 0;
     transition: opacity 0.2s;
 }
@@ -381,10 +397,10 @@ body {
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* Message Status (Ticks) */
-.message-status {
-    text-align: right;
-    margin-top: 5px;
+/* Delete Button */
+.delete-btn {
+    background: rgba(255, 0, 0, 0.1);
+    display: inline-block;
 }
 
 .status-tick {
@@ -396,6 +412,16 @@ body {
 .status-tick[data-status="sent"] {
     color: #999;
 }
+
+.status-tick[data-status="delivered"] {
+    color: #999;
+}
+
+.status-tick[data-status="read"] {
+    color: #4fc3f7 !important;
+}
+
+/* Remove old color classes - now using indicator box */
 
 .status-tick[data-status="delivered"] {
     color: #999;

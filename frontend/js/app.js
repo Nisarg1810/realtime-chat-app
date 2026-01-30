@@ -162,6 +162,14 @@ function initializeSocket() {
         updateMessageStatus(data.message_id, data.status);
     });
 
+    // Handle message deletion
+    socket.on('message_deleted', (data) => {
+        const messageDiv = document.querySelector(`[data-message-id="${data.message_id}"]`);
+        if (messageDiv) {
+            messageDiv.remove();
+        }
+    });
+
     // User joined notification
     socket.on('user_joined', (data) => {
         // Don't show notification for own join
@@ -265,7 +273,7 @@ function displayMessage(data) {
     
     // Get message length color
     const messageLength = data.message.length;
-    const colorClass = getMessageColorClass(messageLength);
+    const colorIndicator = getMessageColorIndicator(messageLength);
 
     const timestamp = formatTimestamp(data.timestamp);
     
@@ -284,25 +292,35 @@ function displayMessage(data) {
     }
 
     messageDiv.innerHTML = `
+        ${colorIndicator}
         <div class="message-header">
             <span class="username">${escapeHtml(data.username)}</span>
             <span class="timestamp">${timestamp}</span>
         </div>
         ${replyHTML}
-        <div class="message-content ${colorClass}">
+        <div class="message-content">
             ${escapeHtml(data.message)}
         </div>
-        ${isOwnMessage ? '<div class="message-status"><span class="status-tick" data-status="sent">✓</span></div>' : ''}
+        <div class="message-actions">
+            ${isOwnMessage ? '<div class="message-status"><span class="status-tick" data-status="sent">✓</span></div>' : ''}
+            ${!isOwnMessage ? '<button class="reply-btn" title="Reply">↩️</button>' : ''}
+            ${isOwnMessage ? '<button class="delete-btn" title="Delete">🗑️</button>' : ''}
+        </div>
     `;
 
-    // Add reply button for other users' messages
+    // Add event listeners after adding to DOM
     if (!isOwnMessage) {
-        const replyBtn = document.createElement('button');
-        replyBtn.className = 'reply-btn';
-        replyBtn.innerHTML = '↩️';
-        replyBtn.title = 'Reply';
-        replyBtn.onclick = () => setReplyTo(data);
-        messageDiv.querySelector('.message-content').appendChild(replyBtn);
+        const replyBtn = messageDiv.querySelector('.reply-btn');
+        if (replyBtn) {
+            replyBtn.onclick = () => setReplyTo(data);
+        }
+    }
+    
+    if (isOwnMessage) {
+        const deleteBtn = messageDiv.querySelector('.delete-btn');
+        if (deleteBtn) {
+            deleteBtn.onclick = () => deleteMessage(data.message_id);
+        }
     }
 
     messageArea.appendChild(messageDiv);
@@ -405,6 +423,31 @@ function getMessageColorClass(length) {
         return 'msg-medium'; // Medium color
     } else {
         return 'msg-long'; // Darker color
+    }
+}
+
+// Get message color indicator box based on length
+function getMessageColorIndicator(length) {
+    let color, label;
+    if (length < 50) {
+        color = '#4caf50'; // Green for short
+        label = 'Short';
+    } else if (length < 150) {
+        color = '#ff9800'; // Orange for medium
+        label = 'Medium';
+    } else {
+        color = '#f44336'; // Red for long
+        label = 'Long';
+    }
+    return `<div class="message-size-indicator" style="background-color: ${color};" title="${label} message (${length} chars)"></div>`;
+}
+
+// Delete message
+function deleteMessage(messageId) {
+    if (!messageId) return;
+    
+    if (confirm('Delete this message?')) {
+        socket.emit('delete_message', { message_id: messageId });
     }
 }
 

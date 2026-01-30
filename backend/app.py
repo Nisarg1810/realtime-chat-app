@@ -161,6 +161,25 @@ def handle_message_read(data):
                 }, room=message_statuses[message_id]['sender_sid'])
 
 
+@socketio.on('delete_message')
+def handle_delete_message(data):
+    """Handle message deletion"""
+    message_id = data.get('message_id')
+    
+    if message_id in message_statuses:
+        # Only allow sender to delete their own messages
+        if request.sid == message_statuses[message_id]['sender_sid']:
+            # Remove from message statuses
+            del message_statuses[message_id]
+            
+            print(f'Message deleted: {message_id}')
+            
+            # Broadcast deletion to all clients
+            emit('message_deleted', {
+                'message_id': message_id
+            }, broadcast=True)
+
+
 @socketio.on('user_leaving')
 def handle_user_leaving(data):
     """Handle explicit user leaving event before disconnect"""
