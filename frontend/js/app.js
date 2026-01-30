@@ -151,9 +151,22 @@ function initializeSocket() {
     });
 
     // Disconnection
-    socket.on('disconnect', () => {
-        console.log('Disconnected from server');
+    socket.on('disconnect', (reason) => {
+        console.log('Disconnected from server:', reason);
         displaySystemMessage('❌ Disconnected from server');
+    });
+
+    // Reconnection attempt
+    socket.on('reconnect_attempt', () => {
+        console.log('Attempting to reconnect...');
+    });
+
+    // Reconnected successfully
+    socket.on('reconnect', () => {
+        console.log('Reconnected to server');
+        displaySystemMessage('✅ Reconnected to server');
+        // Rejoin with username
+        socket.emit('user_joined', { username: username });
     });
 }
 

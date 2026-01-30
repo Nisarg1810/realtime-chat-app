@@ -42,22 +42,24 @@ def handle_disconnect():
     global online_count
     
     # Get username if exists
-    username = connected_users.get(request.sid, 'Unknown User')
+    username = connected_users.get(request.sid)
     
-    # Remove from connected users
-    if request.sid in connected_users:
+    # Only process if user was actually in the connected_users list
+    if username:
+        # Remove from connected users
         del connected_users[request.sid]
-    
-    online_count = len(connected_users)
-    
-    print(f'Client disconnected: {request.sid} ({username})')
-    print(f'Total online: {online_count}')
-    
-    # Broadcast user left
-    emit('user_left', {
-        'username': username,
-        'online_count': online_count
-    }, broadcast=True)
+        online_count = len(connected_users)
+        
+        print(f'Client disconnected: {request.sid} ({username})')
+        print(f'Total online: {online_count}')
+        
+        # Broadcast user left to all OTHER clients
+        emit('user_left', {
+            'username': username,
+            'online_count': online_count
+        }, broadcast=True, include_self=False)
+    else:
+        print(f'Client disconnected before joining: {request.sid}')
 
 
 @socketio.on('user_joined')
