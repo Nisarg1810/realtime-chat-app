@@ -5,6 +5,7 @@ const BACKEND_URL = 'https://realtime-chat-app-3ij2.onrender.com'; // Change to:
 // Global variables
 let socket;
 let username = '';
+let replyToMessage = null;
 
 // DOM Elements
 const usernameModal = document.getElementById('usernameModal');
@@ -16,6 +17,10 @@ const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 const currentUsername = document.getElementById('currentUsername');
 const onlineCount = document.getElementById('onlineCount');
+const replyPreview = document.getElementById('replyPreview');
+const replyUsername = document.getElementById('replyUsername');
+const replyText = document.getElementById('replyText');
+const cancelReply = document.getElementById('cancelReply');
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
@@ -43,6 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') {
             sendMessage();
         }
+    });
+
+    // Cancel reply
+    cancelReply.addEventListener('click', () => {
+        replyToMessage = null;
+        replyPreview.classList.add('hidden');
+        messageInput.focus();
     });
 
     // Disconnect socket when page is closed or refreshed
@@ -129,10 +141,25 @@ function initializeSocket() {
     socket.on('receive_message', (data) => {
         displayMessage(data);
         
+        // Send delivered acknowledgment if it's not our own message
+        if (data.username !== username && data.message_id) {
+            socket.emit('message_delivered', { message_id: data.message_id });
+        }
+        
+        // Send read acknowledgment if window is focused
+        if (data.username !== username && data.message_id && document.hasFocus()) {
+            socket.emit('message_read', { message_id: data.message_id });
+        }
+        
         // Show notification if message is from someone else and window is not focused
         if (data.username !== username && (!document.hasFocus() || document.hidden)) {
             showNotification(data.username, data.message);
         }
+    });
+
+    // Handle message status updates (ticks)
+    socket.on('message_status_update', (data) => {
+        updateMessageStatus(data.message_id, data.status);
     });
 
     // User joined notification
@@ -200,12 +227,25 @@ function sendMessage() {
         return;
     }
 
-    // Emit message to server
-    socket.emit('send_message', {
+    const messageData = {
         username: username,
         message: message,
         timestamp: new Date().toISOString()
-    });
+    };
+
+    // Add reply data if replying
+    if (replyToMessage) {
+        messageData.reply_to = {
+            username: replyToMessage.username,
+            message: replyToMessage.message
+        };
+        // Clear reply
+        replyToMessage = null;
+        replyPreview.classList.add('hidden');
+    }
+
+    // Emit message to server
+    socket.emit('send_message', messageData);
 
     // Clear input
     messageInput.value = '';
@@ -217,18 +257,53 @@ function displayMessage(data) {
     const messageDiv = document.createElement('div');
     const isOwnMessage = data.username === username;
     messageDiv.className = `message ${isOwnMessage ? 'own' : 'other'}`;
+    
+    // Set data attribute for message ID
+    if (data.message_id) {
+        messageDiv.setAttribute('data-message-id', data.message_id);
+    }
+    
+    // Get message length color
+    const messageLength = data.message.length;
+    const colorClass = getMessageColorClass(messageLength);
 
     const timestamp = formatTimestamp(data.timestamp);
+    
+    // Build reply HTML if message is a reply
+    let replyHTML = '';
+    if (data.reply_to) {
+        replyHTML = `
+            <div class="reply-reference">
+                <div class="reply-bar"></div>
+                <div class="reply-info">
+                    <strong>${escapeHtml(data.reply_to.username)}</strong>
+                    <p>${escapeHtml(data.reply_to.message.substring(0, 50))}${data.reply_to.message.length > 50 ? '...' : ''}</p>
+                </div>
+            </div>
+        `;
+    }
 
     messageDiv.innerHTML = `
         <div class="message-header">
             <span class="username">${escapeHtml(data.username)}</span>
             <span class="timestamp">${timestamp}</span>
         </div>
-        <div class="message-content">
+        ${replyHTML}
+        <div class="message-content ${colorClass}">
             ${escapeHtml(data.message)}
         </div>
+        ${isOwnMessage ? '<div class="message-status"><span class="status-tick" data-status="sent">✓</span></div>' : ''}
     `;
+
+    // Add reply button for other users' messages
+    if (!isOwnMessage) {
+        const replyBtn = document.createElement('button');
+        replyBtn.className = 'reply-btn';
+        replyBtn.innerHTML = '↩️';
+        replyBtn.title = 'Reply';
+        replyBtn.onclick = () => setReplyTo(data);
+        messageDiv.querySelector('.message-content').appendChild(replyBtn);
+    }
 
     messageArea.appendChild(messageDiv);
     scrollToBottom();
@@ -289,3 +364,58 @@ function showNotification(title, body) {
         };
     }
 }
+
+// Set reply to message
+function setReplyTo(messageData) {
+    replyToMessage = messageData;
+    replyUsername.textContent = messageData.username;
+    replyText.textContent = messageData.message.substring(0, 100) + (messageData.message.length > 100 ? '...' : '');
+    replyPreview.classList.remove('hidden');
+    messageInput.focus();
+}
+
+// Update message status (ticks)
+function updateMessageStatus(messageId, status) {
+    const messageDiv = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageDiv) return;
+    
+    const statusTick = messageDiv.querySelector('.status-tick');
+    if (!statusTick) return;
+    
+    statusTick.setAttribute('data-status', status);
+    
+    // Update tick display
+    if (status === 'sent') {
+        statusTick.innerHTML = '✓'; // Single tick
+        statusTick.style.color = '#999';
+    } else if (status === 'delivered') {
+        statusTick.innerHTML = '✓✓'; // Double tick
+        statusTick.style.color = '#999';
+    } else if (status === 'read') {
+        statusTick.innerHTML = '✓✓'; // Double tick blue
+        statusTick.style.color = '#4fc3f7';
+    }
+}
+
+// Get message color class based on length
+function getMessageColorClass(length) {
+    if (length < 50) {
+        return 'msg-short'; // Light color
+    } else if (length < 150) {
+        return 'msg-medium'; // Medium color
+    } else {
+        return 'msg-long'; // Darker color
+    }
+}
+
+// Handle window focus to mark messages as read
+window.addEventListener('focus', () => {
+    // Mark all visible messages as read
+    const messages = document.querySelectorAll('.message.other[data-message-id]');
+    messages.forEach(msg => {
+        const messageId = msg.getAttribute('data-message-id');
+        if (messageId && socket && socket.connected) {
+            socket.emit('message_read', { message_id: messageId });
+        }
+    });
+});

@@ -31,6 +31,15 @@
             <!-- Messages will be added here dynamically -->
         </div>
 
+        <!-- Reply Preview (hidden by default) -->
+        <div id="replyPreview" class="reply-preview hidden">
+            <div class="reply-content">
+                <span class="reply-label">Replying to <strong id="replyUsername"></strong></span>
+                <p id="replyText"></p>
+            </div>
+            <button id="cancelReply" class="cancel-reply">✕</button>
+        </div>
+
         <!-- Message Input -->
         <div class="message-input-container">
             <input 

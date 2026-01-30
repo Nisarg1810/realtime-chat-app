@@ -285,3 +285,150 @@ body {
         max-width: 85%;
     }
 }
+
+/* Reply Preview Styles */
+.reply-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: #f0f0f0;
+    border-left: 4px solid #667eea;
+    margin: 0 20px;
+    border-radius: 8px 8px 0 0;
+}
+
+.reply-preview.hidden {
+    display: none;
+}
+
+.reply-content {
+    flex: 1;
+}
+
+.reply-label {
+    font-size: 12px;
+    color: #667eea;
+}
+
+.reply-content p {
+    margin: 5px 0 0 0;
+    font-size: 14px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cancel-reply {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #999;
+    padding: 5px 10px;
+}
+
+.cancel-reply:hover {
+    color: #333;
+}
+
+/* Reply Reference in Messages */
+.reply-reference {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    margin-bottom: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.reply-bar {
+    width: 3px;
+    background: #667eea;
+    border-radius: 2px;
+}
+
+.reply-info strong {
+    color: #667eea;
+}
+
+.reply-info p {
+    margin: 3px 0 0 0;
+    color: #666;
+    font-size: 12px;
+}
+
+/* Reply Button */
+.reply-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    padding: 4px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.message:hover .reply-btn {
+    opacity: 1;
+}
+
+.reply-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Message Status (Ticks) */
+.message-status {
+    text-align: right;
+    margin-top: 5px;
+}
+
+.status-tick {
+    font-size: 12px;
+    color: #999;
+    display: inline-block;
+}
+
+.status-tick[data-status="sent"] {
+    color: #999;
+}
+
+.status-tick[data-status="delivered"] {
+    color: #999;
+}
+
+.status-tick[data-status="read"] {
+    color: #4fc3f7 !important;
+}
+
+/* Message Color Classes based on Length */
+.msg-short {
+    background: rgba(102, 126, 234, 0.9) !important;
+}
+
+.msg-medium {
+    background: rgba(102, 126, 234, 1) !important;
+}
+
+.msg-long {
+    background: rgba(80, 100, 200, 1) !important;
+}
+
+.message.other .msg-short {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 2px solid #e8f0fe;
+}
+
+.message.other .msg-medium {
+    background: rgba(240, 245, 255, 1) !important;
+    border: 2px solid #d0e2ff;
+}
+
+.message.other .msg-long {
+    background: rgba(230, 240, 255, 1) !important;
+    border: 2px solid #b8d4ff;
+}

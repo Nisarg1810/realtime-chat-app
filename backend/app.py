@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 from datetime import datetime
 import os
+import uuid
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
@@ -24,6 +25,9 @@ socketio = SocketIO(
 # Store connected users
 connected_users = {}
 online_count = 0
+
+# Store message statuses: {message_id: {sender_sid, delivered_by: [sid1, sid2], read_by: [sid1, sid2]}}
+message_statuses = {}
 
 
 @app.route('/')
@@ -93,15 +97,68 @@ def handle_message(data):
     username = data.get('username', 'Anonymous')
     message = data.get('message', '')
     timestamp = data.get('timestamp', datetime.utcnow().isoformat())
+    reply_to = data.get('reply_to')  # Optional reply data
+    
+    # Generate unique message ID
+    message_id = str(uuid.uuid4())
     
     print(f'Message from {username}: {message}')
     
+    # Store message status
+    message_statuses[message_id] = {
+        'sender_sid': request.sid,
+        'sender_username': username,
+        'delivered_by': [],
+        'read_by': []
+    }
+    
     # Broadcast message to all connected clients
     emit('receive_message', {
+        'message_id': message_id,
         'username': username,
         'message': message,
-        'timestamp': timestamp
+        'timestamp': timestamp,
+        'reply_to': reply_to,
+        'status': 'sent'
     }, broadcast=True)
+
+
+@socketio.on('message_delivered')
+def handle_message_delivered(data):
+    """Client confirms they received the message"""
+    message_id = data.get('message_id')
+    
+    if message_id in message_statuses:
+        # Don't count sender as delivered
+        if request.sid != message_statuses[message_id]['sender_sid']:
+            if request.sid not in message_statuses[message_id]['delivered_by']:
+                message_statuses[message_id]['delivered_by'].append(request.sid)
+                
+                # Notify sender about delivery
+                emit('message_status_update', {
+                    'message_id': message_id,
+                    'status': 'delivered',
+                    'count': len(message_statuses[message_id]['delivered_by'])
+                }, room=message_statuses[message_id]['sender_sid'])
+
+
+@socketio.on('message_read')
+def handle_message_read(data):
+    """Client confirms they read the message"""
+    message_id = data.get('message_id')
+    
+    if message_id in message_statuses:
+        # Don't count sender as read
+        if request.sid != message_statuses[message_id]['sender_sid']:
+            if request.sid not in message_statuses[message_id]['read_by']:
+                message_statuses[message_id]['read_by'].append(request.sid)
+                
+                # Notify sender about read status
+                emit('message_status_update', {
+                    'message_id': message_id,
+                    'status': 'read',
+                    'count': len(message_statuses[message_id]['read_by'])
+                }, room=message_statuses[message_id]['sender_sid'])
 
 
 @socketio.on('user_leaving')
