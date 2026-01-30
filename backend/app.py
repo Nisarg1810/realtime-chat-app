@@ -65,19 +65,11 @@ def handle_disconnect():
         print(f'Remaining users: {list(connected_users.values())}')
         print(f'Remaining sessions: {dict(connected_users)}')
         
-        # Only broadcast user left if this username is no longer connected
-        # (to avoid showing "user left" if they have another active session)
-        if username not in connected_users.values():
-            # Broadcast user left to ALL clients
-            socketio.emit('user_left', {
-                'username': username,
-                'online_count': online_count
-            })
-        else:
-            # Just update count if user still has other sessions
-            socketio.emit('online_count_update', {
-                'online_count': online_count
-            })
+        # Always broadcast user left when someone disconnects
+        socketio.emit('user_left', {
+            'username': username,
+            'online_count': online_count
+        })
     else:
         print(f'Client disconnected before joining: {request.sid}')
 

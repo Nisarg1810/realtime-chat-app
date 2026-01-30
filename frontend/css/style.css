@@ -272,10 +272,17 @@ body {
 /* System Messages */
 .system-message {
     text-align: center;
-    color: #999;
-    font-size: 12px;
-    margin: 10px 0;
-    font-style: italic;
+    color: #666;
+    font-size: 13px;
+    margin: 15px 0;
+    padding: 8px 15px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 15px;
+    display: inline-block;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
 }
 
 /* Message Input Container */
