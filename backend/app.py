@@ -104,6 +104,27 @@ def handle_message(data):
     }, broadcast=True)
 
 
+@socketio.on('user_leaving')
+def handle_user_leaving(data):
+    """Handle explicit user leaving event before disconnect"""
+    global online_count
+    
+    username = data.get('username')
+    
+    if request.sid in connected_users:
+        del connected_users[request.sid]
+        online_count = len(connected_users)
+        
+        print(f'User explicitly leaving: {username} (SID: {request.sid})')
+        print(f'Total online: {online_count}')
+        
+        # Broadcast user left to all OTHER clients
+        emit('user_left', {
+            'username': username,
+            'online_count': online_count
+        }, broadcast=True, include_self=False)
+
+
 @socketio.on_error_default
 def default_error_handler(e):
     print(f'An error occurred: {str(e)}')

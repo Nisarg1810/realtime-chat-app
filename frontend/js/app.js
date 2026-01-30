@@ -47,17 +47,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Disconnect socket when page is closed or refreshed
     // Using multiple events to ensure disconnect is caught
-    window.addEventListener('beforeunload', () => {
+    const handlePageLeave = () => {
         if (socket && socket.connected) {
+            console.log('Page leaving, sending user_leaving event');
+            // Emit explicit leaving event before disconnect
+            socket.emit('user_leaving', { username: username });
             socket.disconnect();
         }
-    });
+    };
 
-    window.addEventListener('pagehide', () => {
-        if (socket && socket.connected) {
-            socket.disconnect();
-        }
-    });
+    window.addEventListener('beforeunload', handlePageLeave);
+    window.addEventListener('pagehide', handlePageLeave);
+    window.addEventListener('unload', handlePageLeave);
 
     // Handle page visibility change (mobile browsers)
     document.addEventListener('visibilitychange', () => {
@@ -109,12 +110,17 @@ function joinChat() {
 // Initialize Socket.IO
 function initializeSocket() {
     socket = io(BACKEND_URL, {
-        transports: ['websocket', 'polling']
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
+        timeout: 20000
     });
 
     // Connection successful
     socket.on('connect', () => {
-        console.log('Connected to server');
+        console.log('Connected to server, SID:', socket.id);
         // Emit user joined event
         socket.emit('user_joined', { username: username });
     });
@@ -145,6 +151,7 @@ function initializeSocket() {
 
     // User left notification
     socket.on('user_left', (data) => {
+        console.log('User left event received:', data);
         displaySystemMessage(`${data.username} left the analysis`);
         updateOnlineCount(data.online_count);
         
