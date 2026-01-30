@@ -155,11 +155,11 @@ body {
 
 /* Message Styles */
 .message {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     animation: fadeIn 0.3s ease-in;
     position: relative;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: flex-end;
 }
 
@@ -176,8 +176,8 @@ body {
 
 /* Avatar Styles */
 .message-avatar {
-    width: 35px;
-    height: 35px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: flex;
@@ -185,7 +185,7 @@ body {
     justify-content: center;
     color: white;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 13px;
     flex-shrink: 0;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
@@ -194,21 +194,21 @@ body {
 .message-wrapper {
     display: flex;
     flex-direction: column;
-    max-width: 65%;
-    gap: 3px;
+    max-width: 55%;
+    gap: 2px;
 }
 
 .message-header {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 2px;
-    padding: 0 5px;
+    gap: 5px;
+    margin-bottom: 1px;
+    padding: 0 3px;
 }
 
 .username {
     font-weight: 600;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .message.own .username {
@@ -220,21 +220,21 @@ body {
 }
 
 .timestamp {
-    font-size: 10px;
+    font-size: 9px;
     color: #667;
     opacity: 0.7;
 }
 
 .message-content {
-    padding: 8px 12px;
+    padding: 6px 10px;
     border-radius: 8px;
-    min-width: 80px;
+    max-width: fit-content;
     word-wrap: break-word;
     word-break: break-word;
     white-space: pre-wrap;
     overflow-wrap: break-word;
-    line-height: 1.4;
-    font-size: 14px;
+    line-height: 1.35;
+    font-size: 13.5px;
     position: relative;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
