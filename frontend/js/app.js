@@ -136,7 +136,6 @@ function initializeSocket() {
         timeout: 20000,
         forceNew: true  // Force new connection instead of reusing
     });
-    });
 
     // Connection successful
     socket.on('connect', () => {
@@ -204,8 +203,13 @@ function initializeSocket() {
         }
     });
 
-    // Online count update (for reconnections without join message)
+    // Online count update (without join/leave message)
     socket.on('online_count_update', (data) => {
+        updateOnlineCount(data.online_count);
+    });
+
+    // Update online count (legacy event name support)
+    socket.on('update_online_count', (data) => {
         updateOnlineCount(data.online_count);
     });
 

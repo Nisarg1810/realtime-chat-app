@@ -25,19 +25,8 @@ socketio = SocketIO(
 # Store connected users: {session_id: username}
 connected_users = {}
 
-# Store message statuses: {message_id: {sender_sid, sender_username, delivered_by: [sid1, sid2], read_by: [sid1, sid2]}}
+# Store message statuses: {message_id: {sender_sid, delivered_by: [sid1, sid2], read_by: [sid1, sid2]}}
 message_statuses = {}
-
-
-def get_online_count():
-    """Get unique online users count"""
-    unique_users = set(connected_users.values())
-    return len(unique_users)
-
-
-def get_unique_usernames():
-    """Get list of unique usernames currently connected"""
-    return list(set(connected_users.values()))
 
 
 @app.route('/')
@@ -45,13 +34,13 @@ def index():
     return {
         'status': 'running',
         'message': 'Flask Socket.IO Analysis Server',
-        'online_users': get_online_count()
+        'online_users': len(connected_users)
     }
 
 
 @app.route('/health')
 def health():
-    return {'status': 'healthy', 'online_users': get_online_count()}
+    return {'status': 'healthy', 'online_users': len(connected_users)}
 
 
 @socketio.on('connect')
@@ -69,22 +58,17 @@ def handle_disconnect():
         # Remove from connected users
         del connected_users[request.sid]
         
-        # Check if this user still has other active sessions
-        user_still_online = username in connected_users.values()
-        
-        online_count = get_online_count()
+        online_count = len(connected_users)
         
         print(f'Client disconnected: {request.sid} ({username})')
-        print(f'User still has other sessions: {user_still_online}')
-        print(f'Total unique online: {online_count}')
-        print(f'All unique users: {get_unique_usernames()}')
+        print(f'Total online: {online_count}')
+        print(f'Remaining users: {list(connected_users.values())}')
         
-        # Only broadcast "user left" if this was their last session
-        if not user_still_online:
-            socketio.emit('user_left', {
-                'username': username,
-                'online_count': online_count
-            })
+        # Broadcast user left to ALL clients
+        socketio.emit('user_left', {
+            'username': username,
+            'online_count': online_count
+        })
     else:
         print(f'Client disconnected before joining: {request.sid}')
 
@@ -93,30 +77,28 @@ def handle_disconnect():
 def handle_user_joined(data):
     username = data.get('username', 'Anonymous')
     
-    # Check if user already has other sessions
-    was_already_online = username in connected_users.values()
+    # Check if this is a reconnection (same username, different session)
+    is_new_user = username not in connected_users.values()
     
-    # Add this session to connected users
+    # Add or update the user in connected users
     connected_users[request.sid] = username
     
-    online_count = get_online_count()
+    online_count = len(connected_users)
     
     print(f'User joined: {username} (SID: {request.sid})')
-    print(f'Was already online: {was_already_online}')
-    print(f'Total unique online: {online_count}')
-    print(f'All unique users: {get_unique_usernames()}')
-    print(f'All sessions: {connected_users}')
+    print(f'Total online: {online_count}')
+    print(f'All users: {list(connected_users.values())}')
     
-    # Only broadcast "user joined" if this is their first session
-    if not was_already_online:
-        # Broadcast to all clients (new user joined)
+    # Only broadcast join message if this is a new user (not a reconnection)
+    if is_new_user:
+        # Broadcast to all clients
         socketio.emit('user_joined', {
             'username': username,
             'online_count': online_count
         })
     else:
-        # Just update online count for this session (reconnection/refresh)
-        emit('online_count_update', {
+        # Just update online count without join message
+        socketio.emit('online_count_update', {
             'online_count': online_count
         })
 
@@ -142,14 +124,14 @@ def handle_message(data):
     }
     
     # Broadcast message to all connected clients
-    socketio.emit('receive_message', {
+    emit('receive_message', {
         'message_id': message_id,
         'username': username,
         'message': message,
         'timestamp': timestamp,
         'reply_to': reply_to,
         'status': 'sent'
-    })
+    }, broadcast=True)
 
 
 @socketio.on('message_delivered')
@@ -164,7 +146,7 @@ def handle_message_delivered(data):
                 message_statuses[message_id]['delivered_by'].append(request.sid)
                 
                 # Notify sender about delivery
-                socketio.emit('message_status_update', {
+                emit('message_status_update', {
                     'message_id': message_id,
                     'status': 'delivered',
                     'count': len(message_statuses[message_id]['delivered_by'])
@@ -183,7 +165,7 @@ def handle_message_read(data):
                 message_statuses[message_id]['read_by'].append(request.sid)
                 
                 # Notify sender about read status
-                socketio.emit('message_status_update', {
+                emit('message_status_update', {
                     'message_id': message_id,
                     'status': 'read',
                     'count': len(message_statuses[message_id]['read_by'])
@@ -204,9 +186,9 @@ def handle_delete_message(data):
             print(f'Message deleted: {message_id}')
             
             # Broadcast deletion to all clients
-            socketio.emit('message_deleted', {
+            emit('message_deleted', {
                 'message_id': message_id
-            })
+            }, broadcast=True)
 
 
 @socketio.on('user_leaving')
@@ -215,25 +197,18 @@ def handle_user_leaving(data):
     username = data.get('username')
     
     if request.sid in connected_users:
-        # Remove this session
         del connected_users[request.sid]
-        
-        # Check if user still has other active sessions
-        user_still_online = username in connected_users.values()
-        
-        online_count = get_online_count()
+        online_count = len(connected_users)
         
         print(f'User explicitly leaving: {username} (SID: {request.sid})')
-        print(f'User still has other sessions: {user_still_online}')
-        print(f'Total unique online: {online_count}')
-        print(f'Remaining unique users: {get_unique_usernames()}')
+        print(f'Total online: {online_count}')
+        print(f'Remaining users: {list(connected_users.values())}')
         
-        # Only broadcast "user left" if this was their last session
-        if not user_still_online:
-            socketio.emit('user_left', {
-                'username': username,
-                'online_count': online_count
-            })
+        # Broadcast user left to ALL remaining clients
+        socketio.emit('user_left', {
+            'username': username,
+            'online_count': online_count
+        })
 
 
 @socketio.on_error_default
