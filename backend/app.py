@@ -63,12 +63,21 @@ def handle_disconnect():
         print(f'Client disconnected: {request.sid} ({username})')
         print(f'Total online: {online_count}')
         print(f'Remaining users: {list(connected_users.values())}')
+        print(f'Remaining sessions: {dict(connected_users)}')
         
-        # Broadcast user left to ALL clients
-        socketio.emit('user_left', {
-            'username': username,
-            'online_count': online_count
-        })
+        # Only broadcast user left if this username is no longer connected
+        # (to avoid showing "user left" if they have another active session)
+        if username not in connected_users.values():
+            # Broadcast user left to ALL clients
+            socketio.emit('user_left', {
+                'username': username,
+                'online_count': online_count
+            })
+        else:
+            # Just update count if user still has other sessions
+            socketio.emit('online_count_update', {
+                'online_count': online_count
+            })
     else:
         print(f'Client disconnected before joining: {request.sid}')
 
@@ -77,10 +86,19 @@ def handle_disconnect():
 def handle_user_joined(data):
     username = data.get('username', 'Anonymous')
     
-    # Check if this is a reconnection (same username, different session)
-    is_new_user = username not in connected_users.values()
+    # Check if this username is already connected (find old sessions)
+    old_sessions = [sid for sid, uname in connected_users.items() if uname == username and sid != request.sid]
     
-    # Add or update the user in connected users
+    # Remove old sessions for this username
+    for old_sid in old_sessions:
+        if old_sid in connected_users:
+            print(f'Removing duplicate session for {username}: {old_sid}')
+            del connected_users[old_sid]
+    
+    # Check if this is a new user (username didn't exist before cleanup)
+    is_new_user = len(old_sessions) == 0
+    
+    # Add current session
     connected_users[request.sid] = username
     
     online_count = len(connected_users)
@@ -88,6 +106,7 @@ def handle_user_joined(data):
     print(f'User joined: {username} (SID: {request.sid})')
     print(f'Total online: {online_count}')
     print(f'All users: {list(connected_users.values())}')
+    print(f'Connected sessions: {dict(connected_users)}')
     
     # Only broadcast join message if this is a new user (not a reconnection)
     if is_new_user:
@@ -97,7 +116,7 @@ def handle_user_joined(data):
             'online_count': online_count
         })
     else:
-        # Just update online count without join message
+        # Just update online count without join message (reconnection)
         socketio.emit('online_count_update', {
             'online_count': online_count
         })
