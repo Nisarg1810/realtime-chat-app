@@ -23,11 +23,14 @@ socketio = SocketIO(
 )
 
 # Store connected users
-connected_users = {}
+connected_users = {}  # {session_id: username}
 online_count = 0
 
 # Store message statuses: {message_id: {sender_sid, delivered_by: [sid1, sid2], read_by: [sid1, sid2]}}
 message_statuses = {}
+
+# Track user sessions to prevent duplicates: {username: [sid1, sid2]}
+user_sessions = {}
 
 
 @app.route('/')
@@ -60,6 +63,13 @@ def handle_disconnect():
     if username:
         # Remove from connected users
         del connected_users[request.sid]
+        
+        # Remove from user_sessions
+        if username in user_sessions and request.sid in user_sessions[username]:
+            user_sessions[username].remove(request.sid)
+            if not user_sessions[username]:  # If no more sessions for this user
+                del user_sessions[username]
+        
         online_count = len(connected_users)
         
         print(f'Client disconnected: {request.sid} ({username})')
@@ -74,9 +84,25 @@ def handle_disconnect():
     else:
         print(f'Client disconnected before joining: {request.sid}')
 
-
-@socketio.on('user_joined')
-def handle_user_joined(data):
+Remove any old sessions for this username (in case of reconnection)
+    if username in user_sessions:
+        old_sids = user_sessions[username].copy()
+        for old_sid in old_sids:
+            if old_sid != request.sid and old_sid in connected_users:
+                print(f'Removing old session for {username}: {old_sid}')
+                del connected_users[old_sid]
+                user_sessions[username].remove(old_sid)
+    
+    # Always update/set the username for this session
+    was_already_connected = request.sid in connected_users
+    connected_users[request.sid] = username
+    
+    # Track this session for the username
+    if username not in user_sessions:
+        user_sessions[username] = []
+    if request.sid not in user_sessions[username]:
+        user_sessions[username].append(request.sid)
+    
     global online_count
     
     username = data.get('username', 'Anonymous')
@@ -184,6 +210,13 @@ def handle_delete_message(data):
             del message_statuses[message_id]
             
             print(f'Message deleted: {message_id}')
+        
+        # Remove from user_sessions
+        if username in user_sessions and request.sid in user_sessions[username]:
+            user_sessions[username].remove(request.sid)
+            if not user_sessions[username]:
+                del user_sessions[username]
+        
             
             # Broadcast deletion to all clients
             emit('message_deleted', {

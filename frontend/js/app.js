@@ -121,13 +121,21 @@ function joinChat() {
 
 // Initialize Socket.IO
 function initializeSocket() {
+    // Disconnect any existing socket first
+    if (socket && socket.connected) {
+        console.log('Closing existing socket connection');
+        socket.disconnect();
+    }
+    
     socket = io(BACKEND_URL, {
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
         reconnectionAttempts: 5,
-        timeout: 20000
+        timeout: 20000,
+        forceNew: true  // Force new connection instead of reusing
+    });
     });
 
     // Connection successful
