@@ -1,5 +1,6 @@
 // Configuration
-const BACKEND_URL = 'http://localhost:5000'; // Change this to your backend URL when deployed
+// IMPORTANT: Update this URL after deploying backend to Render
+const BACKEND_URL = 'http://localhost:5000'; // Change to: https://your-app-name.onrender.com
 
 // Global variables
 let socket;
