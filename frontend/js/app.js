@@ -1,6 +1,6 @@
 // Configuration
 // IMPORTANT: Update this URL after deploying backend to Render
-const BACKEND_URL = 'http://localhost:5000'; // Change to: https://your-app-name.onrender.com
+const BACKEND_URL = 'https://realtime-chat-app-3ij2.onrender.com'; // Change to: https://your-app-name.onrender.com
 
 // Global variables
 let socket;
