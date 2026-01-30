@@ -64,12 +64,13 @@ def handle_disconnect():
         
         print(f'Client disconnected: {request.sid} ({username})')
         print(f'Total online: {online_count}')
+        print(f'Remaining users: {list(connected_users.values())}')
         
-        # Broadcast user left to all OTHER clients
-        emit('user_left', {
+        # Broadcast user left to ALL clients (not including_self since they disconnected)
+        socketio.emit('user_left', {
             'username': username,
             'online_count': online_count
-        }, broadcast=True, include_self=False)
+        })
     else:
         print(f'Client disconnected before joining: {request.sid}')
 
@@ -80,19 +81,24 @@ def handle_user_joined(data):
     
     username = data.get('username', 'Anonymous')
     
-    # Check if this session already has a username (reconnection)
-    if request.sid in connected_users:
+    # Always update/set the username for this session
+    was_already_connected = request.sid in connected_users
+    connected_users[request.sid] = username
+    online_count = len(connected_users)
+    
+    if was_already_connected:
         print(f'User reconnected: {username} (SID: {request.sid})')
     else:
-        connected_users[request.sid] = username
         print(f'User joined: {username} (SID: {request.sid})')
     
-    online_count = len(connected_users)
     print(f'Total online: {online_count}')
+    print(f'All users: {list(connected_users.values())}')
     
-    # Broadcast to all clients
+    # Broadcast to all clients (including self for online count update)
     emit('user_joined', {
         'username': username,
+        'online_count': online_count
+    }, broadcast=True)
         'online_count': online_count
     }, broadcast=True)
 
@@ -198,6 +204,13 @@ def handle_user_leaving(data):
         
         print(f'User explicitly leaving: {username} (SID: {request.sid})')
         print(f'Total online: {online_count}')
+        print(f'Remaining users: {list(connected_users.values())}')
+        
+        # Broadcast user left to ALL remaining clients
+        socketio.emit('user_left', {
+            'username': username,
+            'online_count': online_count
+        })
         
         # Broadcast user left to all OTHER clients
         emit('user_left', {
