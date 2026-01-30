@@ -10,8 +10,16 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 # Enable CORS
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Initialize SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+# Initialize SocketIO with eventlet for better WebSocket support
+socketio = SocketIO(
+    app, 
+    cors_allowed_origins="*",
+    async_mode='eventlet',
+    ping_timeout=60,
+    ping_interval=25,
+    logger=True,
+    engineio_logger=True
+)
 
 # Store connected users
 connected_users = {}

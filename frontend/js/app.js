@@ -46,9 +46,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Disconnect socket when page is closed or refreshed
+    // Using multiple events to ensure disconnect is caught
     window.addEventListener('beforeunload', () => {
         if (socket && socket.connected) {
             socket.disconnect();
+        }
+    });
+
+    window.addEventListener('pagehide', () => {
+        if (socket && socket.connected) {
+            socket.disconnect();
+        }
+    });
+
+    // Handle page visibility change (mobile browsers)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && socket && socket.connected) {
+            // Don't disconnect on visibility change, just log it
+            console.log('Page hidden, but keeping connection alive');
         }
     });
 });
