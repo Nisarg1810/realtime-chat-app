@@ -34,10 +34,7 @@ def health():
 
 @socketio.on('connect')
 def handle_connect():
-    global online_count
-    online_count += 1
     print(f'Client connected: {request.sid}')
-    print(f'Total online: {online_count}')
 
 
 @socketio.on('disconnect')
