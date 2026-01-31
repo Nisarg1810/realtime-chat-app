@@ -392,8 +392,7 @@ function displaySystemMessage(message) {
 
 // Update online count
 function updateOnlineCount(count) {
-    // Always show 2 online (hardcoded)
-    onlineCount.textContent = `● 2 online`;
+    onlineCount.textContent = `● ${count} online`;
 }
 
 // Scroll to bottom of message area
