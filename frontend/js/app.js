@@ -24,8 +24,7 @@ const replyUsername = document.getElementById('replyUsername');
 const replyText = document.getElementById('replyText');
 const cancelReply = document.getElementById('cancelReply');
 
-// Hardcoded credentials
-const VALID_USERNAME = 'patel09';
+// Hardcoded password (username can be anything)
 const VALID_PASSWORD = '1206';
 
 // Initialize when page loads
@@ -130,16 +129,16 @@ function joinChat() {
         return;
     }
 
-    // Check credentials
-    if (enteredUsername !== VALID_USERNAME || enteredPassword !== VALID_PASSWORD) {
-        loginError.textContent = 'Invalid username or password';
+    // Check password only (username can be anything)
+    if (enteredPassword !== VALID_PASSWORD) {
+        loginError.textContent = 'Invalid password';
         loginError.classList.remove('hidden');
         passwordInput.value = '';
         passwordInput.focus();
         return;
     }
 
-    // Credentials are valid
+    // Password is valid, use entered username
     username = enteredUsername;
     currentUsername.textContent = username;
 
