@@ -11,7 +11,9 @@
     <div id="usernameModal" class="modal">
         <div class="modal-content">
             <h2>Welcome to Analysis</h2>
-            <input type="text" id="usernameInput" placeholder="Enter your username" maxlength="20">
+            <input type="text" id="usernameInput" placeholder="Enter username" maxlength="20" autocomplete="username">
+            <input type="password" id="passwordInput" placeholder="Enter password" maxlength="50" autocomplete="current-password">
+            <div id="loginError" class="error-message hidden"></div>
             <button id="joinBtn">Join Chat</button>
         </div>
     </div>

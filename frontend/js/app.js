@@ -10,6 +10,8 @@ let replyToMessage = null;
 // DOM Elements
 const usernameModal = document.getElementById('usernameModal');
 const usernameInput = document.getElementById('usernameInput');
+const passwordInput = document.getElementById('passwordInput');
+const loginError = document.getElementById('loginError');
 const joinBtn = document.getElementById('joinBtn');
 const chatContainer = document.getElementById('chatContainer');
 const messageArea = document.getElementById('messageArea');
@@ -22,6 +24,10 @@ const replyUsername = document.getElementById('replyUsername');
 const replyText = document.getElementById('replyText');
 const cancelReply = document.getElementById('cancelReply');
 
+// Hardcoded credentials
+const VALID_USERNAME = 'patel09';
+const VALID_PASSWORD = '1206';
+
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
     // Request notification permission on page load
@@ -33,8 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Join chat on button click
     joinBtn.addEventListener('click', joinChat);
 
-    // Join chat on Enter key
+    // Join chat on Enter key in username field
     usernameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            passwordInput.focus();
+        }
+    });
+
+    // Join chat on Enter key in password field
+    passwordInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             joinChat();
         }
@@ -96,12 +109,37 @@ function requestNotificationPermission() {
 // Join chat function
 function joinChat() {
     const enteredUsername = usernameInput.value.trim();
+    const enteredPassword = passwordInput.value.trim();
 
+    // Hide any previous error
+    loginError.classList.add('hidden');
+
+    // Validate username
     if (enteredUsername === '') {
-        alert('Please enter a username');
+        loginError.textContent = 'Please enter a username';
+        loginError.classList.remove('hidden');
+        usernameInput.focus();
         return;
     }
 
+    // Validate password
+    if (enteredPassword === '') {
+        loginError.textContent = 'Please enter a password';
+        loginError.classList.remove('hidden');
+        passwordInput.focus();
+        return;
+    }
+
+    // Check credentials
+    if (enteredUsername !== VALID_USERNAME || enteredPassword !== VALID_PASSWORD) {
+        loginError.textContent = 'Invalid username or password';
+        loginError.classList.remove('hidden');
+        passwordInput.value = '';
+        passwordInput.focus();
+        return;
+    }
+
+    // Credentials are valid
     username = enteredUsername;
     currentUsername.textContent = username;
 

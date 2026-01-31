@@ -85,6 +85,21 @@ body {
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
+/* Error Message */
+.error-message {
+    background: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.error-message.hidden {
+    display: none;
+}
+
 /* Chat Container */
 .chat-container {
     width: 90%;
@@ -492,8 +507,6 @@ body {
 }
 
 .status-tick[data-status="read"] {
-    color: #4fc3f7 !important;
-}
     color: #4fc3f7 !important;
 }
 
