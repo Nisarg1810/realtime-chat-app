@@ -392,9 +392,7 @@ function displaySystemMessage(message) {
 
 // Update online count
 function updateOnlineCount(count) {
-    // Add 2 to actual count for display
-    const displayCount = count + 2;
-    onlineCount.textContent = `● ${displayCount} online`;
+    onlineCount.textContent = `● ${count} online`;
 }
 
 // Scroll to bottom of message area
